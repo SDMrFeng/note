@@ -92,12 +92,12 @@ class Solution:
         #     tail.next = head2
         return dummy.next
         
-    def sortList(self, head: ListNode) -> ListNode:
+    def sortList1(self, head: ListNode) -> ListNode:
         """
-        递归Recursively (自上而下)
+        递归Recursively (自上而下归并)
         【Tip】 注意内置函数map的应用，非常赞赞
 
-        Time Complexity: O(logn)
+        Time Complexity: O(nlogn)
         Space Complexity: O(logn)
         """
         if not head or not head.next:
@@ -112,6 +112,62 @@ class Solution:
         return self.merge(*map(self.sortList, (head, slow)))
     
     def sortList(self, head: ListNode) -> ListNode:
+        """
+        迭代Iteratively (自下而上归并)
+        【Tip】 
+
+        Time Complexity: O(nlogn)
+        Space Complexity: O(1)
+        """
+        if not head or not head.next:
+            return head
         
+        # 计算链表长度
+        length, curr = 0, head
+        while curr:
+            length += 1
+            curr = curr.next
+        
+        subLength, dummy = 1, ListNode(None, head)
+        while subLength < length:
+            prev, curr = dummy, dummy.next
+            while curr:
+                # 获取“本轮中”长度为subLength的第一段
+                head1 = curr
+                for i in range(1, subLength):
+                    if curr.next:
+                        curr = curr.next
+                    else:
+                        break
+                # 获取“本轮中”长度为subLength的第二段（需要将第一段截断None）
+                # head2, curr, curr.next = curr.next, curr.next, None  # 如果连续赋值不是普通变量，有风险
+                head2 = curr.next
+                curr.next = None
+                curr = head2
+                for i in range(1, subLength):
+                    if curr and curr.next:
+                        curr = curr.next
+                    else:
+                        break
+                
+                # 截断“本轮中”第二段，保留剩余的头部
+                succ = None
+                if curr:
+                    succ, curr.next = curr.next, None
+                
+                # 合并“本轮中”前两段
+                merged = self.merge(head1, head2)
+                # 将“本轮中”合并后的前两段拼接到“前n轮后”，并记录几轮过后的最后一个节点prev
+                prev.next = merged
+                while prev.next:
+                    prev = prev.next
+                # 为下一轮准备
+                curr = succ
+            
+            subLength <<=1 # 升级(翻倍)归并的长度
+        
+        return dummy.next
+
+
 # @lc code=end
 
